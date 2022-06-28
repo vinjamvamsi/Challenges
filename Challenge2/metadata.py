@@ -1,44 +1,34 @@
 import requests
 import json
 
-metadata_url = 'http://169.254.169.254/latest/'
+metadata_url = "http://169.254.169.254/latest/"
+path = ["meta-data/"]
 
-
-def expand_tree(url, arr):
-    output = {}
-    for item in arr:
-        new_url = url + item
+def getmetadata(metadata_url, path):
+    result = {}
+    for var in path:
+        new_url = metadata_url + var
         r = requests.get(new_url)
         text = r.text
-        if item[-1] == "/":
-            list_of_values = r.text.splitlines()
-            output[item[:-1]] = expand_tree(new_url, list_of_values)
-        elif is_json(text):
-            output[item] = json.loads(text)
+        if var[-1] == "/":
+            newpath = r.text.splitlines()
+            result[var[:-1]] =getmetadata(new_url, newpath)
+        elif loadjson(text):
+            result[var] = json.loads(text)
         else:
-            output[item] = text
-    return output
+            result[var] = text
+    data_to_json = json.dumps(result, indent=2, sort_keys=True)
+    print(data_to_json)
 
-
-def get_metadata():
-    initial = ["meta-data/"]
-    result = expand_tree(metadata_url, initial)
-    return result
-
-
-def get_metadata_json():
-    metadata = get_metadata()
-    metadata_json = json.dumps(metadata, indent=4, sort_keys=True)
-    return metadata_json
-
-
-def is_json(myjson):
+def loadjson(value):
     try:
-        json.loads(myjson)
+        json.loads(value)
     except ValueError:
         return False
     return True
 
 
+
+
 if __name__ == '__main__':
-    print(get_metadata_json())
+    getmetadata(metadata_url, path)
